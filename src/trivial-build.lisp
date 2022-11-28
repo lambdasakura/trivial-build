@@ -46,7 +46,8 @@
     (terpri)
     (uiop:run-program command
                       :output *standard-output*
-                      :error :output)))
+                      :error-output :lines
+                      )))
 
 (defun build (system-name entry-point binary-pathname)
   "Build the system."
