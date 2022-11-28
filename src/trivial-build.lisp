@@ -27,20 +27,22 @@
 
 (defun boot-and-build (system-name entry-point binary-pathname
                        impl-path impl-flags load-flag eval-flag)
-  (let ((command (format nil "~S ~{~A ~} ~A ~S ~A"
-                         (namestring impl-path)
-                         impl-flags
-                         #+quicklisp
-                         load-flag
-                         #-quicklisp
-                         ""
-                         #+quicklisp
-                         (namestring (merge-pathnames #p"setup.lisp"
-                                                      ql:*quicklisp-home*))
-                         #-quicklisp
-                         ""
-                         (code-list-to-eval
-                          eval-flag
+  (let ((command (format nil "~a ~{~A ~} ~A ~S ~A"
+                        (namestring impl-path)
+                        impl-flags
+                        #+quicklisp
+                        load-flag
+                         
+                        #-quicklisp
+                        ""
+
+                        #+quicklisp
+                        (namestring (merge-pathnames #p"setup.lisp" ql:*quicklisp-home*))
+                        #-quicklisp
+                        ""
+
+                        (code-list-to-eval
+                         eval-flag
                           (load-and-build-code system-name entry-point binary-pathname)))))
     (format t "~&Launch: ~A~%" command)
     (terpri)
