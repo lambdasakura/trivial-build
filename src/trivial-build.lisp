@@ -10,15 +10,20 @@
         (pathname-directory (trivial-exe:executable-pathname))
         :test #'string=))
 
-(defun load-and-build-code (system-name entry-point binary-pathname)
+(defun load-and-build-code (system-name entry-point binary-pathname application-type)
   "Return a list of code strings to eval."
   (list
    "(setf *debugger-hook* #'(lambda (c h) (declare (ignore h)) (uiop:print-condition-backtrace c) (uiop:quit -1)))"
    (format nil "(asdf:load-system :~A)" system-name)
    (format nil "(setf uiop:*image-entry-point* #'(lambda () ~A))"
            entry-point)
-   (format nil "(uiop:dump-image ~S :executable t #+sb-core-compression :compression #+sb-core-compression t)"
-           binary-pathname)))
+   (format nil "(uiop:dump-image ~S :executable t #+sb-core-compression :compression #+sb-core-compression t ~A)"
+           binary-pathname
+           #+sbcl
+           (format nil ":application-type ~S" application-type)
+          #-sbcl
+          ""
+     )))
 
 (defun code-list-to-eval (eval-flag list)
   (with-output-to-string (stream)
@@ -26,13 +31,13 @@
       (format stream " ~A ~S" eval-flag code))))
 
 (defun boot-and-build (system-name entry-point binary-pathname
-                       impl-path impl-flags load-flag eval-flag)
+                       impl-path impl-flags load-flag eval-flag application-type)
   (let ((command (format nil "~a ~{~A ~} ~A ~S ~A"
                         (namestring impl-path)
                         impl-flags
                         #+quicklisp
                         load-flag
-                         
+                   
                         #-quicklisp
                         ""
 
@@ -40,10 +45,10 @@
                         (namestring (merge-pathnames #p"setup.lisp" ql:*quicklisp-home*))
                         #-quicklisp
                         ""
-
+                                      
                         (code-list-to-eval
                          eval-flag
-                          (load-and-build-code system-name entry-point binary-pathname)))))
+                          (load-and-build-code system-name entry-point binary-pathname application-type)))))
     (format t "~&Launch: ~A~%" command)
     (terpri)
     (uiop:run-program command
@@ -51,7 +56,7 @@
                       :error-output :lines
                       )))
 
-(defun build (system-name entry-point binary-pathname)
+(defun build (system-name entry-point binary-pathname &key application-type)
   "Build the system."
   (declare (type keyword system-name)
            (type string entry-point)
@@ -74,5 +79,7 @@
                         (lisp-invocation:lisp-implementation-load-flag
                          implementation)
                         (lisp-invocation:lisp-implementation-eval-flag
-                         implementation))))
+                         implementation)
+                        application-type
+                        )))
   binary-pathname)
