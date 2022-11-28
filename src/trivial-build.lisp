@@ -17,8 +17,7 @@
    (format nil "(asdf:load-system :~A)" system-name)
    (format nil "(setf uiop:*image-entry-point* #'(lambda () ~A))"
            entry-point)
-   (format nil "(uiop:dump-image ~S :executable t
-  #+sb-core-compression :compression #+sb-core-compression t)"
+   (format nil "(uiop:dump-image ~S :executable t #+sb-core-compression :compression #+sb-core-compression t)"
            binary-pathname)))
 
 (defun code-list-to-eval (eval-flag list)
